@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>함께 가는 공정의 길 - 도덕 퀴즈</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Noto Sans KR Only -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <!-- html2canvas for Image Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        * {
+            font-family: 'Noto Sans KR', sans-serif !important;
+        }
+        body {
+            background-color: #f0f4f8;
+            background-image: radial-gradient(#e0e7ff 1.5px, transparent 1.5px), radial-gradient(#e0e7ff 1.5px, #f0f4f8 1.5px);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+        }
+        
+        /* Square Card Container - Compact & Fit in Screen */
+        .square-box {
+            width: 100%;
+            max-width: 500px;
+            min-height: 520px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Certificate Frame */
+        .certificate-border {
+            border: 12px double #fcd34d;
+            background: #ffffff;
+            box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.15);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-3 sm:p-4">
+
+    <div id="app" class="w-full flex items-center justify-center">
+
+        <!-- 1. START SCREEN -->
+        <div id="start-screen" class="square-box bg-white rounded-3xl p-6 sm:p-7 shadow-xl border-4 border-pink-200 text-center relative overflow-hidden">
+            <div class="absolute -top-6 -left-6 text-pink-200 text-7xl opacity-50"><i class="fa-solid fa-cloud"></i></div>
+            <div class="absolute -bottom-6 -right-6 text-yellow-200 text-7xl opacity-50"><i class="fa-solid fa-sun"></i></div>
+            
+            <div class="my-auto space-y-4 relative z-10">
+                <div class="inline-block p-3 bg-pink-100 rounded-full text-pink-500 mb-1">
+                    <i class="fa-solid fa-scale-balanced fa-2x"></i>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-pink-500 tracking-tight">
+                    6단원. 함께 가는 공정의 길 🌸
+                </h1>
+                <p class="text-gray-600 text-sm font-medium">
+                    도덕 퀴즈 20문항을 풀고 멋진 상장을 받아요!
+                </p>
+
+                <div class="space-y-3 pt-2 max-w-xs mx-auto text-left">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1 ml-1"><i class="fa-solid fa-id-card text-pink-400 mr-1"></i> 학번 (4자리)</label>
+                        <input type="text" id="student-id" maxlength="4" placeholder="예: 3501 (3학년 5반 01번)" class="w-full px-4 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-gray-700 text-sm transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1 ml-1"><i class="fa-solid fa-user text-pink-400 mr-1"></i> 이름</label>
+                        <input type="text" id="student-name" placeholder="이름을 입력하세요" class="w-full px-4 py-2.5 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-gray-700 text-sm transition">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" class="w-full py-3.5 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white font-bold rounded-2xl shadow-lg transform active:scale-95 transition text-base relative z-10 flex items-center justify-center gap-2 mt-4">
+                <span>퀴즈 시작하기</span>
+                <i class="fa-solid fa-heart"></i>
+            </button>
+        </div>
+
+        <!-- 2. QUIZ SCREEN (SCROLL-FREE FIT) -->
+        <div id="quiz-screen" class="square-box bg-white rounded-3xl p-5 sm:p-6 shadow-xl border-4 border-sky-200 hidden relative overflow-hidden flex flex-col justify-between">
+            <!-- Header Info -->
+            <div class="flex justify-between items-center pb-2 border-b border-sky-100 flex-shrink-0">
+                <span class="text-xs font-bold px-2.5 py-1 bg-sky-100 text-sky-700 rounded-full flex items-center gap-1">
+                    <i class="fa-solid fa-bookmark"></i> 문제 <span id="q-num">1</span> / 20
+                </span>
+                <span id="chance-badge" class="text-xs font-bold px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full flex items-center gap-1">
+                    <i class="fa-solid fa-star"></i> 첫 번째 시도
+                </span>
+                <span class="text-xs font-bold text-emerald-600 px-2.5 py-1 bg-emerald-50 rounded-lg">
+                    점수: <span id="current-score">0</span>점
+                </span>
+            </div>
+
+            <!-- Question & Options Container (Compact, no scrollbar needed) -->
+            <div class="my-auto py-2 flex flex-col justify-center gap-3">
+                <div class="flex items-start gap-1.5">
+                    <span class="text-pink-500 text-lg font-black leading-none pt-0.5">Q.</span>
+                    <h2 id="q-title" class="text-sm sm:text-base font-bold text-gray-800 leading-snug">
+                        질문 텍스트가 여기에 들어갑니다.
+                    </h2>
+                </div>
+
+                <!-- 4 Options -->
+                <div class="space-y-1.5" id="options-container">
+                    <!-- Options injected via JS -->
+                </div>
+            </div>
+
+            <!-- Bottom Control Area -->
+            <div class="space-y-2 flex-shrink-0 pt-1">
+                <!-- Feedback Alert Banner -->
+                <div id="feedback-msg" class="text-center text-xs font-bold py-2 px-3 rounded-xl hidden transition-all duration-300">
+                    <!-- Dynamic feedback text -->
+                </div>
+
+                <!-- Next Button Section -->
+                <button id="next-btn" onclick="nextQuestion()" class="w-full py-2.5 bg-sky-400 hover:bg-sky-500 text-white font-bold rounded-xl shadow transition text-sm hidden flex items-center justify-center gap-2">
+                    <span>다음 문제로</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. CERTIFICATE RESULT SCREEN -->
+        <div id="result-wrapper" class="hidden flex-col items-center w-full max-w-[500px]">
+            <!-- Square Certificate Card for html2canvas Export -->
+            <div id="certificate-card" class="square-box certificate-border rounded-2xl p-6 text-center relative flex flex-col justify-between my-2 w-full">
+                <!-- Decorative Icons -->
+                <div class="absolute top-3 left-3 text-amber-300 text-2xl"><i class="fa-solid fa-ribbon"></i></div>
+                <div class="absolute top-3 right-3 text-amber-300 text-2xl"><i class="fa-solid fa-ribbon"></i></div>
+                <div class="absolute bottom-3 left-3 text-pink-300 text-2xl"><i class="fa-solid fa-clover"></i></div>
+                <div class="absolute bottom-3 right-3 text-pink-300 text-2xl"><i class="fa-solid fa-sparkles"></i></div>
+
+                <!-- Certificate Header -->
+                <div class="mt-2">
+                    <div class="text-amber-500 text-3xl font-black tracking-widest flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-award"></i>
+                        <span>상 장</span>
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <div class="w-16 h-1 bg-amber-300 mx-auto mt-2 rounded-full"></div>
+                </div>
+
+                <!-- Student Info -->
+                <div class="text-left font-bold text-gray-700 text-sm sm:text-base px-4 space-y-1.5 my-3">
+                    <p><i class="fa-solid fa-graduation-cap text-amber-400 mr-2"></i> 학번: <span id="cert-id" class="text-amber-700 font-extrabold"></span></p>
+                    <p><i class="fa-solid fa-user-astronaut text-amber-400 mr-2"></i> 이름: <span id="cert-name" class="text-amber-700 font-extrabold"></span></p>
+                </div>
+
+                <!-- Main Body Content -->
+                <div class="px-2 my-auto leading-relaxed text-gray-800 text-sm sm:text-base font-semibold">
+                    위 학생은 20문제 중에 
+                    <span id="cert-count" class="text-xl sm:text-2xl font-black text-rose-500 underline decoration-pink-300 decoration-wavy px-1">0</span>문제를 맞혔기에<br>
+                    이 상을 주어 칭찬합니다.
+                </div>
+
+                <!-- Footer Date & Teacher Name -->
+                <div class="mb-2 text-right px-4">
+                    <p id="cert-date" class="text-xs text-gray-500 font-medium mb-1">2026년 0월 0일</p>
+                    <p class="text-base sm:text-lg font-extrabold text-pink-500 tracking-wider">
+                        ✨ 예쁜 담임쌤 ✨
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-2.5 w-full mt-3">
+                <button onclick="openImageInNewTab()" class="flex-1 py-3 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>새 탭으로 이미지 보기 및 저장</span>
+                </button>
+                <button onclick="location.reload()" class="py-3 px-5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl shadow transition text-sm">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> 다시 풀기
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 20 Questions Data for Moral Subject Grade 3 - Unit 6
+        const questions = [
+            {
+                q: "6단원 '함께 가는 공정의 길'에서 말하는 '공정'의 의미로 가장 올바른 것은 무엇인가요?",
+                options: ["나에게만 유리하게 규칙을 만드는 것", "공평하고 정당하여 어느 한쪽으로 치우치지 않는 것", "힘이 센 사람의 말을 무조건 따르는 것", "친한 친구에게만 더 많은 기회를 주는 것"],
+                answer: 1,
+                exp: "공정이란 어느 한쪽으로 치우치지 않고 공평하고 정당한 것을 의미합니다."
+            },
+            {
+                q: "단원 도입부에 나온 비유처럼 '공정'을 표현하기에 가장 알맞은 도구는 무엇일까요?",
+                options: ["길이를 똑같이 재는 자", "내 맘대로 구부러지는 고무줄", "한쪽으로만 기우는 시소", "막혀서 통과할 수 없는 벽"],
+                answer: 0,
+                exp: "공정이란 모두에게 똑같은 기준을 적용하는 '길이를 재는 자'와 같습니다."
+            },
+            {
+                q: "친구들과 의견 충돌이 생겼을 때 공정하게 해결하는 올바른 자세는 무엇인가요?",
+                options: ["목소리가 큰 사람의 의견만 따른다.", "양쪽 의견을 경청하고 치우침 없이 대화한다.", "가위바위보로 진 사람 말을 무조건 무시한다.", "선생님께 말하지 않고 싸워서 이긴다."],
+                answer: 1,
+                exp: "공정한 해결을 위해서는 서로의 의견을 기울여 듣고 치우침 없이 대화해야 합니다."
+            },
+            {
+                q: "공정한 사회를 만들기 위해 '같은 것은 같게' 대하고, '다른 것은 다르게' 대하는 원칙 중 올바른 설명은?",
+                options: ["모든 상황에서 사람들의 차이를 완전히 무시한다.", "키가 작은 사람에게 발받침대를 주는 것은 공정한 배려이다.", "시험 점수와 상관없이 모두에게 똑같은 등수를 준다.", "몸이 불편한 친구에게 운동장 달리기를 똑같이 시킨다."],
+                answer: 1,
+                exp: "필요와 상황의 차이를 고려하여 알맞게 배려하는 것이 참된 공정입니다."
+            },
+            {
+                q: "학급에서 규칙을 정할 때 공정한 규칙이 되기 위해 가장 필요한 조건은 무엇인가요?",
+                options: ["특정 친구에게만 혜택을 주는 규칙", "차별받는 사람이 없도록 모두가 동등하게 지키는 규칙", "반장 마음대로 매일 바꿀 수 있는 규칙", "공부 잘하는 학생이 혼자 정하는 규칙"],
+                answer: 1,
+                exp: "공정한 규칙은 차별받는 사람 없이 누구나 평등하게 적용되어야 합니다."
+            },
+            {
+                q: "다음 중 '불공정한 행동'에 해당하는 것은 무엇일까요?",
+                options: ["청소 순번을 제비뽑기로 정하기", "게임할 때 규칙을 모두에게 똑같이 적용하기", "친한 친구라고 해서 순서를 새치기시켜 주기", "도움이 필요한 친구에게 순서를 양보하기"],
+                answer: 2,
+                exp: "친분이나 사적인 이유로 규칙을 어기고 새치기를 하는 것은 불공정한 행동입니다."
+            },
+            {
+                q: "공정을 실천할 때 바탕이 되는 올바른 마음가짐은 무엇일까요?",
+                options: ["이기심과 편파적인 마음", "배려와 서로 존중하는 마음", "남을 무조건 질투하는 마음", "나만 손해 보지 않으려는 이기심"],
+                answer: 1,
+                exp: "공정함에는 타인을 존중하고 다른 사람의 상황을 배려하는 마음이 포함됩니다."
+            },
+            {
+                q: "운동회 경기에서 공정한 경기가 이루어지기 위해 선수가 가져야 할 태도는?",
+                options: ["심판 눈을 피해 규칙을 슬쩍 어긴다.", "정해진 규칙을 준수하며 최선을 다한다.", "지기 싫어서 상대 선수를 밀쳐서 넘어뜨린다.", "결과에 불복하고 경기를 중간에 포기한다."],
+                answer: 1,
+                exp: "스포츠와 경기에서는 정해진 규칙을 정직하게 지키는 것이 공정의 시작입니다."
+            },
+            {
+                q: "다음 중 '차별'이 아닌 '공정한 배려'에 해당하는 사례는 어느 것일까요?",
+                options: ["남학생이라는 이유만으로 발표 기회를 더 많이 주는 것", "휠체어를 탄 친구를 위해 경사로를 설치해 주는 것", "외모가 마음에 들지 않는다고 모둠 활동에서 빼는 것", "키가 크다고 무조건 앞자리에만 앉히는 것"],
+                answer: 1,
+                exp: "교통약자나 장애인을 위한 경사로 설치 등은 차이가 있는 사람을 위한 정당한 배려입니다."
+            },
+            {
+                q: "공정한 학급 생활을 위해 모둠 역할을 분담하는 가장 바람직한 방법은?",
+                options: ["가장 힘든 일을 한 사람에게 몰아준다.", "서로의 희망과 능력을 고려하여 차례대로 공평하게 나눈다.", "모둠장이 하고 싶은 것만 다 차지한다.", "제일 늦게 온 친구가 나머지 일 전부를 맡는다."],
+                answer: 1,
+                exp: "모둠 역할을 정할 때는 구성원의 의견을 듣고 공평하게 나누어야 합니다."
+            },
+            {
+                q: "공정한 사회가 되었을 때 얻을 수 있는 장점으로 가장 알맞은 것은?",
+                options: ["사람들 사이의 갈등이 줄어들고 서로 신뢰하게 된다.", "특정 사람만 부자가 되고 이익을 본다.", "규칙이 없어져서 내 맘대로 살 수 있다.", "강한 사람만 살아남을 수 있게 된다."],
+                answer: 0,
+                exp: "공정한 사회는 구성원 간의 신뢰를 높이고 갈등을 줄여 행복한 사회를 만듭니다."
+            },
+            {
+                q: "급식 줄을 설 때 불공정한 행동을 하는 친구를 보았습니다. 바람직한 행동은?",
+                options: ["나도 똑같이 줄을 서지 않고 차례를 어긴다.", "새치기한 친구에게 줄을 서야 한다고 친절하게 알려준다.", "친구와 크게 소리 지르며 싸운다.", "모른 척하고 뒤에서 욕을 한다."],
+                answer: 1,
+                exp: "불공정한 상황을 보면 올바르고 친절하게 규칙 준수를 안내해야 합니다."
+            },
+            {
+                q: "다음 중 '공정함'을 상징하는 단어로 가장 적절하지 않은 것은?",
+                options: ["정의", "치우침 없음", "편애", "평등"],
+                answer: 2,
+                exp: "'편애'는 한쪽만 특별히 사랑하는 것으로 공정함과 반대되는 단어입니다."
+            },
+            {
+                q: "학급 회의를 할 때 모든 학생이 공정하게 참여하기 위한 방법은?",
+                options: ["발표력이 좋은 친구만 계속 말한다.", "모든 학생에게 균등한 발언 기회를 준다.", "선생님이 정해준 사람만 의견을 낸다.", "지루하므로 아무도 말하지 않는다."],
+                answer: 1,
+                exp: "공정한 회의를 위해서는 모든 이에게 균등한 발언 기회가 부여되어야 합니다."
+            },
+            {
+                q: "다음 중 '같게 대해야 할 것'에 해당하는 상황은 무엇일까요?",
+                options: ["똑같은 조건의 시험에서 동일한 시간 제공하기", "다리가 부러진 친구와 건강한 친구에게 똑같이 달리기 시키기", "시력이 나쁜 친구에게 안경 없이 시험 보게 하기", "한국어가 서툰 친구에게 설명 없이 한국어 시험 보기"],
+                answer: 0,
+                exp: "동일한 조건의 평가에서는 모두에게 같은 시간과 기준을 적용하는 것이 공정합니다."
+            },
+            {
+                q: "학급 일인일역(학급 봉사) 역할을 바꿀 때 공정한 방법은?",
+                options: ["청소를 잘하는 사람만 매일 청소를 시킨다.", "정기적으로 역할을 순환하거나 공정하게 제비뽑기를 한다.", "인기투표를 해서 1등은 아무것도 하지 않게 한다.", "선생님과 친한 친구에게 쉬운 역할만 준다."],
+                answer: 1,
+                exp: "역할을 바꿀 때는 정기적 순환이나 제비뽑기 등 공정한 기회가 제공되어야 합니다."
+            },
+            {
+                q: "공정을 실천하기 위한 나의 다짐으로 가장 올바른 것은?",
+                options: ["나에게 이익이 될 때만 규칙을 지키겠다.", "차별받는 친구가 있으면 외면하겠다.", "상대방의 입장을 생각하며 규칙과 신의를 지키겠다.", "친구들 사이에서 항상 내 주장만 우기겠다."],
+                answer: 2,
+                exp: "상대방을 배려하고 정해진 규칙을 올바르게 지키는 자세가 필요합니다."
+            },
+            {
+                q: "다음 사례 중 '불공정'에 해당하는 것은 무엇인가요?",
+                options: ["시각장애인 안내견의 대중교통 탑승을 허용하는 것", "도서관 대출 권수를 모든 학생에게 3권씩 똑같이 정하는 것", "시험 문제를 특정 학생에게만 먼저 유출하여 알려주는 것", "노약자석을 비워두는 것"],
+                answer: 2,
+                exp: "특정 학생에게만 평가 문제를 먼저 알려주는 것은 명백한 불공정 행위입니다."
+            },
+            {
+                q: "보드게임을 할 때 공정한 태도는 무엇인가요?",
+                options: ["내가 질 것 같으면 판을 엎어버린다.", "말을 몰래 앞으로 더 이동시킨다.", "정해진 게임 규칙을 준수하며 승패를 인정한다.", "상대방이 방심할 때 규칙을 어긴다."],
+                answer: 2,
+                exp: "게임 시 승패와 상관없이 정해진 규칙을 잘 지키는 것이 공정한 태도입니다."
+            },
+            {
+                q: "6단원의 핵심 주제인 '함께 가는 공정의 길'을 완성하기 위해 가장 중요한 행동은?",
+                options: ["나 혼자만 1등이 되려고 노력하기", "일상생활에서 공정과 배려를 꾸준히 실천하기", "다른 사람의 일에 절대로 관여하지 않기", "규칙은 어기라고 있는 것이라 생각하기"],
+                answer: 1,
+                exp: "모두 함께 행복한 사회를 위해 생활 속에서 공정과 배려를 지속적으로 실천해야 합니다."
+            }
+        ];
+
+        // State Variables
+        let currentIdx = 0;
+        let score = 0;
+        let correctCount = 0;
+        let attemptsLeft = 2; // 2 chances per question
+        let studentId = "";
+        let studentName = "";
+
+        function startQuiz() {
+            const idInput = document.getElementById("student-id").value.trim();
+            const nameInput = document.getElementById("student-name").value.trim();
+
+            // Validate 4-digit student ID (e.g., 3501)
+            const idRegex = /^\d{4}$/;
+            if (!idRegex.test(idInput)) {
+                alert("학번은 '3501'처럼 4자리 숫자로 입력해주세요! 🌸");
+                return;
+            }
+
+            if (!nameInput) {
+                alert("이름을 입력해주세요! 🌸");
+                return;
+            }
+
+            studentId = idInput;
+            studentName = nameInput;
+
+            document.getElementById("start-screen").classList.add("hidden");
+            document.getElementById("quiz-screen").classList.remove("hidden");
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            attemptsLeft = 2;
+            const qData = questions[currentIdx];
+
+            // UI updates
+            document.getElementById("q-num").innerText = currentIdx + 1;
+            document.getElementById("current-score").innerText = score;
+            document.getElementById("q-title").innerText = qData.q;
+            
+            updateChanceBadge();
+
+            // Hide feedback & next btn
+            const feedbackEl = document.getElementById("feedback-msg");
+            feedbackEl.classList.add("hidden");
+            feedbackEl.className = "text-center text-xs font-bold py-2 px-3 rounded-xl hidden transition-all duration-300";
+            
+            document.getElementById("next-btn").classList.add("hidden");
+
+            // Render Options (Compact spacing for single-screen view)
+            const container = document.getElementById("options-container");
+            container.innerHTML = "";
+
+            qData.options.forEach((optText, index) => {
+                const btn = document.createElement("button");
+                btn.className = "w-full text-left p-2.5 sm:p-3 rounded-xl border-2 border-gray-100 bg-gray-50 hover:bg-sky-50 hover:border-sky-300 transition flex items-center gap-2.5 text-xs sm:text-sm font-medium text-gray-700 option-btn";
+                btn.onclick = () => checkAnswer(index, btn);
+
+                const numSpan = document.createElement("span");
+                numSpan.className = "w-5 h-5 rounded-full bg-sky-200 text-sky-700 font-bold flex items-center justify-center text-xs flex-shrink-0";
+                numSpan.innerText = index + 1;
+
+                const textSpan = document.createElement("span");
+                textSpan.innerText = optText;
+
+                btn.appendChild(numSpan);
+                btn.appendChild(textSpan);
+                container.appendChild(btn);
+            });
+        }
+
+        function updateChanceBadge() {
+            const badge = document.getElementById("chance-badge");
+            if (attemptsLeft === 2) {
+                badge.className = "text-xs font-bold px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full flex items-center gap-1";
+                badge.innerHTML = `<i class="fa-solid fa-star"></i> 첫 번째 시도`;
+            } else {
+                badge.className = "text-xs font-bold px-2.5 py-1 bg-rose-100 text-rose-700 rounded-full flex items-center gap-1 animate-pulse";
+                badge.innerHTML = `<i class="fa-solid fa-fire"></i> 두 번째 기회!`;
+            }
+        }
+
+        function checkAnswer(selectedIdx, btnEl) {
+            const qData = questions[currentIdx];
+            const feedbackEl = document.getElementById("feedback-msg");
+
+            if (selectedIdx === qData.answer) {
+                // CORRECT ANSWER
+                score += 5;
+                correctCount += 1;
+                document.getElementById("current-score").innerText = score;
+
+                // Button Styling
+                btnEl.className = "w-full text-left p-2.5 sm:p-3 rounded-xl border-2 border-emerald-400 bg-emerald-50 text-emerald-800 font-bold flex items-center gap-2.5 text-xs sm:text-sm";
+                disableAllOptions();
+
+                feedbackEl.innerText = "⭕ 정답입니다! 아주 잘했어요! 🎉";
+                feedbackEl.className = "text-center text-xs font-bold py-2 px-3 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-300 block";
+
+                document.getElementById("next-btn").classList.remove("hidden");
+            } else {
+                // WRONG ANSWER
+                attemptsLeft -= 1;
+
+                if (attemptsLeft === 1) {
+                    // First Wrong Attempt -> Give 1 more chance
+                    btnEl.disabled = true;
+                    btnEl.className = "w-full text-left p-2.5 sm:p-3 rounded-xl border-2 border-rose-200 bg-rose-50 text-rose-400 line-through opacity-60 flex items-center gap-2.5 text-xs sm:text-sm";
+                    
+                    updateChanceBadge();
+
+                    feedbackEl.innerText = "❌ 아쉬워요! 한 번 더 기회가 있어요. 다시 골라보세요! 💡";
+                    feedbackEl.className = "text-center text-xs font-bold py-2 px-3 rounded-xl bg-amber-100 text-amber-700 border border-amber-300 block";
+                } else {
+                    // Second Wrong Attempt -> Move on
+                    btnEl.className = "w-full text-left p-2.5 sm:p-3 rounded-xl border-2 border-rose-300 bg-rose-50 text-rose-600 font-bold flex items-center gap-2.5 text-xs sm:text-sm";
+                    disableAllOptions();
+
+                    // Highlight Correct Answer
+                    const allBtns = document.querySelectorAll(".option-btn");
+                    if(allBtns[qData.answer]) {
+                        allBtns[qData.answer].className = "w-full text-left p-2.5 sm:p-3 rounded-xl border-2 border-emerald-400 bg-emerald-50 text-emerald-800 font-bold flex items-center gap-2.5 text-xs sm:text-sm";
+                    }
+
+                    feedbackEl.innerText = `❌ 틀렸습니다. 정답은 ${qData.answer + 1}번입니다. (${qData.exp})`;
+                    feedbackEl.className = "text-center text-xs font-bold py-2 px-3 rounded-xl bg-rose-100 text-rose-700 border border-rose-300 block";
+
+                    document.getElementById("next-btn").classList.remove("hidden");
+                }
+            }
+        }
+
+        function disableAllOptions() {
+            const btns = document.querySelectorAll(".option-btn");
+            btns.forEach(b => b.disabled = true);
+        }
+
+        function nextQuestion() {
+            currentIdx += 1;
+            if (currentIdx < questions.length) {
+                loadQuestion();
+            } else {
+                showCertificate();
+            }
+        }
+
+        function showCertificate() {
+            document.getElementById("quiz-screen").classList.add("hidden");
+            const resWrapper = document.getElementById("result-wrapper");
+            resWrapper.classList.remove("hidden");
+            resWrapper.classList.add("flex");
+
+            // Fill Certificate Data
+            document.getElementById("cert-id").innerText = studentId;
+            document.getElementById("cert-name").innerText = studentName;
+            document.getElementById("cert-count").innerText = correctCount;
+
+            // Date Formatting
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`;
+            document.getElementById("cert-date").innerText = dateStr;
+
+            // Trigger Confetti
+            try {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            } catch(e) {}
+        }
+
+        // Open Image in New Tab
+        function openImageInNewTab() {
+            const certElement = document.getElementById("certificate-card");
+
+            html2canvas(certElement, {
+                scale: 2, // High resolution
+                useCORS: true,
+                backgroundColor: "#ffffff"
+            }).then(canvas => {
+                const imgData = canvas.toDataURL("image/png");
+                
+                // Open new window/tab and display image
+                const newWindow = window.open();
+                if (newWindow) {
+                    newWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html lang="ko">
+                        <head>
+                            <meta charset="UTF-8">
+                            <title>상장 이미지 - ${studentName}</title>
+                            <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+                            <style>
+                                * { font-family: 'Noto Sans KR', sans-serif; }
+                                body {
+                                    margin: 0;
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    justify-content: center;
+                                    min-height: 100vh;
+                                    background-color: #f3f4f6;
+                                }
+                                img {
+                                    max-width: 90%;
+                                    max-height: 80vh;
+                                    border-radius: 12px;
+                                    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+                                }
+                                .tip {
+                                    margin-top: 20px;
+                                    font-size: 14px;
+                                    color: #4b5563;
+                                    background: white;
+                                    padding: 10px 20px;
+                                    border-radius: 20px;
+                                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                                    font-weight: bold;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <img src="${imgData}" alt="상장 이미지">
+                            <div class="tip">💡 마우스 우클릭 후 '이미지를 다른 이름으로 저장'을 누르면 저장할 수 있어요!</div>
+                        </body>
+                        </html>
+                    `);
+                    newWindow.document.close();
+                } else {
+                    alert("팝업이 블록되었습니다. 팝업 허용 후 다시 시도해주세요.");
+                }
+            }).catch(err => {
+                console.error(err);
+                alert("상장 이미지를 생성하는 중 오류가 발생했습니다.");
+            });
+        }
+    </script>
+</body>
+</html>
